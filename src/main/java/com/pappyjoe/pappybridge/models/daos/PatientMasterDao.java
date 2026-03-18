@@ -37,7 +37,7 @@ public class PatientMasterDao {
     @Column(name = "CreatedByUserId")
     private Integer createdByUserId = 1;
 
-    @CreationTimestamp
+   // @CreationTimestamp
     @Column(name = "CreatedDate", nullable = false, updatable = false)
     private LocalDate createdDate;
 

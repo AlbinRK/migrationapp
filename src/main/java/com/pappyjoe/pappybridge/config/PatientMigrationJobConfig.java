@@ -1,22 +1,21 @@
 package com.pappyjoe.pappybridge.config;
 
-import com.pappyjoe.pappybridge.models.daos.AddressMasterDao;
-import com.pappyjoe.pappybridge.models.dtos.SaveAddressMasterDto;
+import com.pappyjoe.pappybridge.batch.listener.BatchSkipListener;
+import com.pappyjoe.pappybridge.batch.listener.BatchStepListener;
 import com.pappyjoe.pappybridge.models.dtos.SaveRegPatientMasterDto;
-import com.pappyjoe.pappybridge.writer.PatientMasterItemWriter;
+import com.pappyjoe.pappybridge.batch.processor.PatientProcessor;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.validator.ValidationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -28,14 +27,29 @@ public class PatientMigrationJobConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final PatientMasterItemWriter writer;
+    private final ItemReader<SaveRegPatientMasterDto> reader;
+    private final PatientProcessor processor;
+    private final JdbcBatchItemWriter<SaveRegPatientMasterDto> patientWriter;
+    private final BatchStepListener listener;
+    private final BatchSkipListener skipListener;
 
     @Bean
-    public Step patientStep(ItemReader<SaveRegPatientMasterDto> reader) {
+    public Step patientStep() {
         return new StepBuilder("patientStep", jobRepository)
-                .<SaveRegPatientMasterDto, SaveRegPatientMasterDto>chunk(50, transactionManager)
+                .<SaveRegPatientMasterDto, SaveRegPatientMasterDto>chunk(100, transactionManager)
                 .reader(reader)
-                .writer(writer)
+                .processor(processor)
+                .writer(patientWriter)
+
+                //FAULT TOLERANCE
+                .faultTolerant()
+                .skip(ValidationException.class)
+                .skipLimit(1000)
+                .retry(Exception.class)
+                .retryLimit(3)
+
+                .listener(listener)
+                .listener(skipListener)
                 .build();
     }
 

@@ -32,7 +32,7 @@ public class AddressMasterDao {
     @Column(name = "CreatedById")
     private Integer createdById;
 
-    @CreationTimestamp
+   // @CreationTimestamp
     @Column(name = "CreatedDate", nullable = false, updatable = false)
     private String createdDate;  // consider using LocalDateTime
 

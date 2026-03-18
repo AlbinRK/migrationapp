@@ -41,4 +41,5 @@ public class SaveRegPatientMasterDto {
     private Integer pat_group;
     private Integer postoffice_id;
     private String passportNum;
+    private LocalDate createdDate;
 }

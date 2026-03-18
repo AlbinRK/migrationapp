@@ -99,22 +99,22 @@ public class MigrationController {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
-    @PostMapping("/emergencycontact")
-    public ResponseEntity<String> uploadEmergencyContact(@RequestParam("file") MultipartFile file) {
-        try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file uploaded");
-            }
-            if (!file.getContentType().equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
-                return ResponseEntity.badRequest().body("Invalid file type. Please upload an Excel file (.xlsx)");
-            }
-            String result = migrationService.uploadEmergencyContact(file);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            log.error("Error uploading emergency contact file", e);
-            return ResponseEntity.internalServerError().body("Failed to process file: " + e.getMessage());
-        }
-    }
+//    @PostMapping("/emergencycontact")
+//    public ResponseEntity<String> uploadEmergencyContact(@RequestParam("file") MultipartFile file) {
+//        try {
+//            if (file.isEmpty()) {
+//                return ResponseEntity.badRequest().body("No file uploaded");
+//            }
+//            if (!file.getContentType().equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+//                return ResponseEntity.badRequest().body("Invalid file type. Please upload an Excel file (.xlsx)");
+//            }
+//            String result = migrationService.uploadEmergencyContact(file);
+//            return ResponseEntity.ok(result);
+//        } catch (Exception e) {
+//            log.error("Error uploading emergency contact file", e);
+//            return ResponseEntity.internalServerError().body("Failed to process file: " + e.getMessage());
+//        }
+//    }
 
     @GetMapping("/columns")
     public ResponseEntity<String> getColumns() {

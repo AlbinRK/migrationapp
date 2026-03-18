@@ -1,9 +1,15 @@
-package com.pappyjoe.pappybridge.reader;
+package com.pappyjoe.pappybridge.batch.reader;
 
 import com.pappyjoe.pappybridge.models.dtos.SaveAddressMasterDto;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class AddressExcelRowMapper {
 
@@ -12,7 +18,7 @@ public class AddressExcelRowMapper {
 
         SaveAddressMasterDto dto = new SaveAddressMasterDto();
 
-        dto.setAddPatientMasterId(getIntegerValue(row,0));
+        dto.setAddressMasterID(getIntegerValue(row,0));
         dto.setAddress1(getStringValue(row, 1));
         dto.setAddress2(getStringValue(row, 2));
         dto.setEmailId(getStringValue(row, 3));
@@ -31,6 +37,7 @@ public class AddressExcelRowMapper {
         dto.setStatus(getIntegerValue(row, 16));
         dto.setClinicId(getIntegerValue(row, 17));
         dto.setCreatedById(getIntegerValue(row, 18));
+        dto.setCreatedDate(getDateTimeValue(row, 19 ));
 
 
         return dto;
@@ -97,5 +104,40 @@ public class AddressExcelRowMapper {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private LocalDateTime getDateTimeValue(Row row, int index) {
+
+        Cell cell = row.getCell(index);
+        if (cell == null) return LocalDateTime.now();
+
+        try {
+
+            //Case 1: Excel date (best case)
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return cell.getLocalDateTimeCellValue()
+                        .toLocalDate()
+                        .atStartOfDay(); // 00:00:00
+            }
+
+            //Case 2: String "18/03/2026"
+            if (cell.getCellType() == CellType.STRING) {
+
+                String value = cell.getStringCellValue().trim();
+
+                if (value.isEmpty()) return LocalDateTime.now();
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+                LocalDate date = LocalDate.parse(value, formatter);
+
+                return date.atStartOfDay(); // 00:00:00
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid date at column " + index + ": " + cell);
+        }
+
+        return LocalDateTime.now();
     }
 }

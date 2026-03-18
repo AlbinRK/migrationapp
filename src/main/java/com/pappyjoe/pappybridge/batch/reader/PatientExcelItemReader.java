@@ -1,7 +1,8 @@
-package com.pappyjoe.pappybridge.reader;
+package com.pappyjoe.pappybridge.batch.reader;
 
 import com.pappyjoe.pappybridge.models.dtos.SaveRegPatientMasterDto;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -26,11 +27,14 @@ public class PatientExcelItemReader implements ItemReader<SaveRegPatientMasterDt
 
     private final PatientExcelRowMapper rowMapper = new PatientExcelRowMapper();
 
+    private Workbook workbook;
+    private FileInputStream fis;
+
     @PostConstruct
     public void init() throws Exception {
 
-        FileInputStream fis = new FileInputStream(new File(filePath));
-        Workbook workbook = WorkbookFactory.create(fis);
+        fis = new FileInputStream(new File(filePath));
+        workbook = WorkbookFactory.create(fis);
         Sheet sheet = workbook.getSheetAt(0);
 
         rowIterator = sheet.iterator();
@@ -39,7 +43,16 @@ public class PatientExcelItemReader implements ItemReader<SaveRegPatientMasterDt
         if (rowIterator.hasNext()) {
             rowIterator.next();
         }
+
     }
+
+
+    @PreDestroy
+    public void cleanup() throws Exception {
+        if (workbook != null) workbook.close();
+        if (fis != null) fis.close();
+    }
+
 
     @Override
     public SaveRegPatientMasterDto read() {

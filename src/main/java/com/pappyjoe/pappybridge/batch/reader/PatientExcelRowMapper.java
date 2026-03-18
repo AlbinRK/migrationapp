@@ -1,12 +1,14 @@
-package com.pappyjoe.pappybridge.reader;
+package com.pappyjoe.pappybridge.batch.reader;
 
 import com.pappyjoe.pappybridge.models.dtos.SaveRegPatientMasterDto;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 
 public class PatientExcelRowMapper {
 
@@ -43,6 +45,7 @@ public class PatientExcelRowMapper {
         dto.setA28MsgStatus(getIntegerValue(row, 24));
         dto.setGlobalConsent(getIntegerValue(row, 25));
         dto.setIsEstablished(getIntegerValue(row, 26));
+        dto.setCreatedDate(getDateValue(row,27 ));
 
         // =========================
         // AGE CALCULATION FROM DOB
@@ -160,6 +163,39 @@ public class PatientExcelRowMapper {
             return null;
         }
     }
+
+
+    private LocalDate getDateValue(Row row, int index) {
+
+        Cell cell = row.getCell(index);
+        if (cell == null) return LocalDate.now(); // fallback
+
+        try {
+
+            //Case 1: Proper Excel Date Cell
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return cell.getLocalDateTimeCellValue().toLocalDate();
+            }
+
+            //Case 2: String Date (e.g. "18/03/2026")
+            if (cell.getCellType() == CellType.STRING) {
+                String value = cell.getStringCellValue().trim();
+
+                if (value.isEmpty()) return LocalDate.now();
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+                return LocalDate.parse(value, formatter);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid date at column " + index + " value: " + cell);
+        }
+
+        // fallback
+        return LocalDate.now();
+    }
+
 }
 //    private String getCellValue(Row row, int cellIndex) {
 //        if (row.getCell(cellIndex) == null) {
