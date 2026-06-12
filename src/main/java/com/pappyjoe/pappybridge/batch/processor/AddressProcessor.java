@@ -14,10 +14,10 @@ public class AddressProcessor implements ItemProcessor<SaveAddressMasterDto, Sav
     @Override
     public SaveAddressMasterDto process(SaveAddressMasterDto dto) {
 
-        if (dto.getAddress1() == null || dto.getAddress1().isBlank()) {
-            log.warn("Skipping record: Address1 is null");
-            throw new ValidationException("Invalid Address1");
-        }
+//        if (dto.getAddress1() == null || dto.getAddress1().isBlank()) {
+//            log.warn("Skipping record: Address1 is null");
+//            throw new ValidationException("Invalid Address1");
+//        }
 
         if (dto.getClinicId() == null) {
             log.warn("Skipping record: clinicId missing for address");

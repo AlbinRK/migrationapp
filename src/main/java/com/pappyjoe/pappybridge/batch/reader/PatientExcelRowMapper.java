@@ -12,12 +12,21 @@ import java.time.format.DateTimeFormatter;
 
 public class PatientExcelRowMapper {
 
+    /** Clinic-service stores decrypted DOB as dd/MM/yyyy (e.g. 28/10/1969). */
+    private static final DateTimeFormatter DOB_STORAGE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    private static final DateTimeFormatter[] DOB_INPUT_FORMATS = {
+            DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+            DateTimeFormatter.ISO_LOCAL_DATE,
+            DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    };
+
     public SaveRegPatientMasterDto mapRow(Row row) {
 
         SaveRegPatientMasterDto dto = new SaveRegPatientMasterDto();
 
-        String dobString = getStringValue(row, 0);
-        dto.setDob(dobString);
+        LocalDate dobDate = parseDob(row, 0);
+        dto.setDob(dobDate != null ? dobDate.format(DOB_STORAGE_FORMAT) : null);
 
         dto.setEmiratesId(getStringValue(row, 1));
         dto.setFirstName(getStringValue(row, 2));
@@ -51,43 +60,75 @@ public class PatientExcelRowMapper {
         // AGE CALCULATION FROM DOB
         // =========================
 
-        calculateAge(dto, dobString);
+        calculateAge(dto, dobDate);
 
         return dto;
     }
 
+    private LocalDate parseDob(Row row, int index) {
+        Cell cell = row.getCell(index);
+        if (cell == null) {
+            return null;
+        }
 
-    private void calculateAge(SaveRegPatientMasterDto dto, String dobString) {
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return cell.getLocalDateTimeCellValue().toLocalDate();
+        }
 
-        if (dobString == null || dobString.isBlank()) {
+        if (cell.getCellType() == CellType.FORMULA) {
+            CellType resultType = cell.getCachedFormulaResultType();
+            if (resultType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return cell.getLocalDateTimeCellValue().toLocalDate();
+            }
+            if (resultType == CellType.STRING) {
+                return parseDobText(cell.getStringCellValue().trim());
+            }
+        }
+
+        if (cell.getCellType() == CellType.STRING) {
+            return parseDobText(cell.getStringCellValue().trim());
+        }
+
+        return null;
+    }
+
+    private LocalDate parseDobText(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        for (DateTimeFormatter formatter : DOB_INPUT_FORMATS) {
+            try {
+                return LocalDate.parse(value, formatter);
+            } catch (Exception ignored) {
+                // try next format
+            }
+        }
+        return null;
+    }
+
+    private void calculateAge(SaveRegPatientMasterDto dto, LocalDate dob) {
+
+        if (dob == null) {
             dto.setAgeYears("0");
             dto.setAgeMonths("0");
             dto.setAgeDays("0");
             return;
         }
 
-        try {
-            LocalDate dob = LocalDate.parse(dobString);
-            LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now();
 
-            if (dob.isAfter(today)) {
-                dto.setAgeYears("0");
-                dto.setAgeMonths("0");
-                dto.setAgeDays("0");
-                return;
-            }
-
-            Period period = Period.between(dob, today);
-
-            dto.setAgeYears(String.valueOf(period.getYears()));
-            dto.setAgeMonths(String.valueOf(period.getMonths()));
-            dto.setAgeDays(String.valueOf(period.getDays()));
-
-        } catch (Exception e) {
+        if (dob.isAfter(today)) {
             dto.setAgeYears("0");
             dto.setAgeMonths("0");
             dto.setAgeDays("0");
+            return;
         }
+
+        Period period = Period.between(dob, today);
+
+        dto.setAgeYears(String.valueOf(period.getYears()));
+        dto.setAgeMonths(String.valueOf(period.getMonths()));
+        dto.setAgeDays(String.valueOf(period.getDays()));
     }
 
     // ==========================================
