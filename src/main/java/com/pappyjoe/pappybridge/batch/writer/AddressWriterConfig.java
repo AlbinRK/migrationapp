@@ -58,7 +58,7 @@ public class AddressWriterConfig {
                 :status,
                 :uploadfile,
                 :countryId,
-                :addPatientMasterId,
+                :patientMasterIdFk,
                 :stateId,
                 AES_ENCRYPT(:howKnow, :aesKey),
                 :addressType,
@@ -84,7 +84,7 @@ public class AddressWriterConfig {
             params.addValue("status", item.getStatus());
             params.addValue("uploadfile", item.getUploadfile());
             params.addValue("countryId", item.getCountryId());
-            params.addValue("addPatientMasterId", item.getAddPatientMasterId());
+            params.addValue("patientMasterIdFk", item.getAddPatientMasterId());
             params.addValue("stateId", item.getStateId());
             params.addValue("howKnow", item.getHowKnow());
             params.addValue("addressType", item.getAddressType());

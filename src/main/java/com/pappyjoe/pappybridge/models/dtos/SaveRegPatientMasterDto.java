@@ -31,7 +31,6 @@ public class SaveRegPatientMasterDto {
     private Integer maritalId;
     private Integer raceId;
     private Integer a28MsgStatus;
-    private String passportId;
     private String gccId;
     private Integer priority;
     private Integer globalConsent;

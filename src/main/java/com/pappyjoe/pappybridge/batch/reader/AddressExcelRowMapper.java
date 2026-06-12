@@ -18,7 +18,6 @@ public class AddressExcelRowMapper {
 
         SaveAddressMasterDto dto = new SaveAddressMasterDto();
 
-        dto.setAddressMasterID(getIntegerValue(row,0));
         dto.setAddress1(getStringValue(row, 1));
         dto.setAddress2(getStringValue(row, 2));
         dto.setEmailId(getStringValue(row, 3));
@@ -28,7 +27,7 @@ public class AddressExcelRowMapper {
         dto.setPhoneNo(getStringValue(row, 7));
         dto.setPlace(getStringValue(row, 8));
         dto.setCountryId(getIntegerValue(row, 9));
-        dto.setAddPatientMasterId(getIntegerValue(row, 10));
+        dto.setAddPatientMasterId(resolvePatientMasterId(row));
         dto.setStateId(getIntegerValue(row, 11));
         dto.setHowKnow(getStringValue(row, 12));
         dto.setAddressType(getIntegerValue(row, 13));
@@ -41,6 +40,28 @@ public class AddressExcelRowMapper {
 
 
         return dto;
+    }
+
+    /** Excel index 10 (add_patientMasterID header), fallback index 0 (duplicate header). */
+    private Integer resolvePatientMasterId(Row row) {
+        for (int index : new int[]{10, 0}) {
+            Integer value = getIntegerValue(row, index);
+            if (value != null) {
+                return value;
+            }
+            String text = getStringValue(row, index);
+            if (text != null && !text.isBlank()) {
+                try {
+                    String normalized = text.contains(".")
+                            ? text.substring(0, text.indexOf('.'))
+                            : text.trim();
+                    return Integer.parseInt(normalized);
+                } catch (NumberFormatException ignored) {
+                    // try next column
+                }
+            }
+        }
+        return null;
     }
 
     private String getStringValue(Row row, int index) {
@@ -77,25 +98,39 @@ public class AddressExcelRowMapper {
     private Integer getIntegerValue(Row row, int index) {
         Cell cell = row.getCell(index);
 
-        if (cell == null) return null;
+        if (cell == null) {
+            return null;
+        }
 
         try {
-            switch (cell.getCellType()) {
+            CellType cellType = cell.getCellType();
+            if (cellType == CellType.FORMULA) {
+                cellType = cell.getCachedFormulaResultType();
+            }
+
+            switch (cellType) {
 
                 case NUMERIC:
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        return null;
+                    }
                     return (int) cell.getNumericCellValue();
 
                 case STRING:
                     String value = cell.getStringCellValue().trim();
 
-                    if (value.isEmpty()) return null;
+                    if (value.isEmpty()) {
+                        return null;
+                    }
 
-                    // remove decimal if present (like "30.0")
                     if (value.contains(".")) {
                         value = value.substring(0, value.indexOf("."));
                     }
 
                     return Integer.parseInt(value);
+
+                case BLANK:
+                    return null;
 
                 default:
                     return null;

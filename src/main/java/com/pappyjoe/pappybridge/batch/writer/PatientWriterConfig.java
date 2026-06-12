@@ -117,7 +117,7 @@ public class PatientWriterConfig {
             params.addValue("maritalId", item.getMaritalId());
             params.addValue("raceId", item.getRaceId());
             params.addValue("a28MsgStatus", item.getA28MsgStatus());
-            params.addValue("passportId", item.getPassportId());
+            params.addValue("passportId", item.getPassportNum());
             params.addValue("gccId", item.getGccId());
             params.addValue("priority", item.getPriority());
             params.addValue("globalConsent", item.getGlobalConsent());
