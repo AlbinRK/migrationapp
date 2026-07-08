@@ -117,7 +117,7 @@ public class AddressExcelRowMapper {
                     return (int) cell.getNumericCellValue();
 
                 case STRING:
-                    String value = cell.getStringCellValue().trim();
+                    String value = normalizeNumericText(cell.getStringCellValue());
 
                     if (value.isEmpty()) {
                         return null;
@@ -139,6 +139,16 @@ public class AddressExcelRowMapper {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private String normalizeNumericText(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace('\u00A0', ' ')
+                .replace(",", "")
+                .trim();
     }
 
     private LocalDateTime getDateTimeValue(Row row, int index) {

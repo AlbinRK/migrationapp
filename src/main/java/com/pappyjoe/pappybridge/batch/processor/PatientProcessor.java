@@ -12,6 +12,15 @@ public class PatientProcessor implements ItemProcessor<SaveRegPatientMasterDto, 
 
     @Override
     public SaveRegPatientMasterDto process(SaveRegPatientMasterDto dto) {
+        dto.setPatientId(normalizeText(dto.getPatientId()));
+        dto.setFirstName(normalizeText(dto.getFirstName()));
+        dto.setLastName(normalizeText(dto.getLastName()));
+        dto.setMiddleName(normalizeText(dto.getMiddleName()));
+        dto.setEmiratesId(normalizeText(dto.getEmiratesId()));
+        dto.setPassportNum(normalizeText(dto.getPassportNum()));
+        dto.setGccId(normalizeText(dto.getGccId()));
+        dto.setGender(normalizeText(dto.getGender()));
+        dto.setSalutation(normalizeText(dto.getSalutation()));
 
         if (dto.getPatientId() == null || dto.getPatientId().isBlank()) {
             log.warn("Skipping record: PatientId is null");
@@ -19,12 +28,21 @@ public class PatientProcessor implements ItemProcessor<SaveRegPatientMasterDto, 
         }
 
         if (dto.getFirstName() == null || dto.getFirstName().isBlank()) {
-            log.warn("Skipping record: FirstName missing for patientId={}", dto.getPatientId());
-            throw new ValidationException("Invalid FirstName");
+            // Keep the row migratable when source firstName is blank.
+            dto.setFirstName(dto.getPatientId());
+            log.warn("FirstName missing for patientId={}, defaulting firstName to patientId", dto.getPatientId());
         }
 
-        // You can normalize data here if needed
-
         return dto;
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        // Normalize non-breaking spaces often seen in Excel exports.
+        String normalized = value.replace('\u00A0', ' ').strip();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

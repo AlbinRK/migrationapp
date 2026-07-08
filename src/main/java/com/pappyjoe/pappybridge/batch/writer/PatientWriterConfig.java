@@ -49,6 +49,7 @@ public class PatientWriterConfig {
                 passportNum,
                 gccId,
                 priority,
+                postoffice_id,
                 globalConsent,
                 isEstablished,
                 photo,
@@ -84,6 +85,7 @@ public class PatientWriterConfig {
                 CASE WHEN :gccId IS NULL OR :gccId = '' 
                     THEN NULL ELSE AES_ENCRYPT(:gccId, :aesKey) END,
                 :priority,
+                :postofficeId,
                 :globalConsent,
                 :isEstablished,
                 :photo,
@@ -120,6 +122,7 @@ public class PatientWriterConfig {
             params.addValue("passportId", item.getPassportNum());
             params.addValue("gccId", item.getGccId());
             params.addValue("priority", item.getPriority());
+            params.addValue("postofficeId", item.getPostoffice_id());
             params.addValue("globalConsent", item.getGlobalConsent());
             params.addValue("isEstablished", item.getIsEstablished());
             params.addValue("photo", item.getPhoto());

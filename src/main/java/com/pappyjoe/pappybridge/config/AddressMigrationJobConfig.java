@@ -2,6 +2,7 @@ package com.pappyjoe.pappybridge.config;
 
 import com.pappyjoe.pappybridge.batch.listener.BatchSkipListener;
 import com.pappyjoe.pappybridge.batch.listener.BatchStepListener;
+import com.pappyjoe.pappybridge.exceptions.ValidationException;
 import com.pappyjoe.pappybridge.models.dtos.SaveAddressMasterDto;
 import com.pappyjoe.pappybridge.batch.processor.AddressProcessor;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,6 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.validator.ValidationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
